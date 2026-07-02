@@ -48,10 +48,10 @@ class CargadorDatos:
 
     def guardar(self, df_raw: pd.DataFrame, df_processed: pd.DataFrame):
         raw_file_path = self.raw_path / "raw_results.csv"
-        processed_file_path = self.processed_path / "processed_filtered.csv"
+        processed_file_path = self.raw_path / "partidos-mundial.csv"
 
-        df_raw.to_csv(raw_file_path, index=False)
-        df_processed.to_csv(processed_file_path, index=False)
+        df_raw.to_csv(raw_file_path, index=True, index_label="id")
+        df_processed.to_csv(processed_file_path, index=True, index_label="id")
 
         logger.info(f"Guardado raw en: {raw_file_path}")
         logger.info(f"Guardado processed en: {processed_file_path}")
