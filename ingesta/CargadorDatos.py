@@ -9,23 +9,66 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class CargadorDatos:
-    def __init__(self, url, raw_path, processed_path):
+    def __init__(self, url_source: str, raw_path: str, processed_path: str):
+        self.url_source = url_source
+        self.raw_path = Path(raw_path)
+        self.processed_path = Path(processed_path)
+        self.raw_path.mkdir(parents = True, exist_ok = True)
+        self.processed_path.mkdir(parents = True, exist_ok = True)
 
-        pass
+    def descargar(self) -> pd.DataFrame:
+        logger.info(f"Descargando CSV desde {self.url_source}")
+        response = requests.get(self.url_source, timeout=30)
+        response.raise_for_status() # Check HTTP response error exc 404, 500, etc.
 
-    def descargar(self):
-        pass
+        df = pd.read_csv(StringIO(response.text))
+        logger.info(f"Descarga completa, dimension de: {df.shape[0]} filas y {df.shape[1]} columnas")
+        return df
     
-    def filtrar_mundial(self):
-        pass
+    def filtrar_mundial(self, df: pd.DataFrame) -> pd.DataFrame:
+        df_mundial = df[df["tournament"] == "FIFA World Cup"].copy()
+        logger.info(f"Filtro aplicado para 'FIFA World Cup': {df_mundial.shape[0]} filas")
+        return df_mundial
     
-    def validar(self):
-        pass    
+    def validar(self, df: pd.DataFrame) -> pd.DataFrame:
+        if df.empty:
+            raise ValueError("DataFrame filtrado está vacío. ")
+        
+        columnas_esperadas = {'date', 'home_team', 'away_team', 'home_score', 'away_score'}
+        columnas_faltantes = columnas_esperadas - set(df.columns)
+        if columnas_faltantes:
+            raise ValueError(f"Faltan columnas esperadas: {columnas_faltantes}")
 
-    def guardar(self):
-        pass
+        nulos = df[['home_score', 'away_score']].isna().sum().sum()
+        if nulos > 0:
+            logger.warning(f"Se encontraron {nulos} valores nulos en marcadores")
+
+        return df
+            
+
+    def guardar(self, df_raw: pd.DataFrame, df_processed: pd.DataFrame):
+        raw_file_path = self.raw_path / "raw_results.csv"
+        processed_file_path = self.processed_path / "processed_filtered.csv"
+
+        df_raw.to_csv(raw_file_path, index=False)
+        df_processed.to_csv(processed_file_path, index=False)
+
+        logger.info(f"Guardado raw en: {raw_file_path}")
+        logger.info(f"Guardado processed en: {processed_file_path}")
     
     def ejecutar(self):
-        pass
-
+        df_raw = self.descargar()
+        df_processed = self.filtrar_mundial(df_raw)
+        df_valid = self.validar(df_processed)
+        self.guardar(df_raw, df_valid)
+        return df_valid
     
+
+if __name__ == "__main__":
+    cargador = CargadorDatos(
+        url_source="https://raw.githubusercontent.com/martj42/international_results/master/results.csv",
+        raw_path="data/raw",
+        processed_path="data/processed",
+    )
+    df_final = cargador.ejecutar()
+    print(df_final.head())
