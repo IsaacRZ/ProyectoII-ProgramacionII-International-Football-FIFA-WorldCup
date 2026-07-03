@@ -44,9 +44,22 @@ class CargadorDatos:
             logger.warning(f"Se encontraron {nulos} valores nulos en marcadores")
 
         return df
+    
+    def enriquecer(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = df.copy()
+        df['clave_partido'] = (
+            df['date'].astype(str) + '_' +
+            df['home_team'] + '_' +
+            df['away_team']
+        )
+        return df
             
 
     def guardar(self, df_raw: pd.DataFrame, df_processed: pd.DataFrame):
+        """
+        Nota: Por especificación del proyecto el archivo raw y processed se almacenan en la ruta: 'data/raw'
+        processed_path queda reservado para uso posterior
+        """
         raw_file_path = self.raw_path / "raw_results.csv"
         processed_file_path = self.raw_path / "partidos-mundial.csv"
 
@@ -59,7 +72,8 @@ class CargadorDatos:
     def ejecutar(self):
         df_raw = self.descargar()
         df_processed = self.filtrar_mundial(df_raw)
-        df_valid = self.validar(df_processed)
+        df_enriched = self.enriquecer(df_processed)
+        df_valid = self.validar(df_enriched)
         self.guardar(df_raw, df_valid)
         return df_valid
     
