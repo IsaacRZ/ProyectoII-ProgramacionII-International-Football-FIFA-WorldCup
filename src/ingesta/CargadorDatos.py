@@ -15,6 +15,7 @@ class CargadorDatos:
         self.processed_path = Path(processed_path)
         self.raw_path.mkdir(parents = True, exist_ok = True)
         self.processed_path.mkdir(parents = True, exist_ok = True)
+        
 
     def descargar(self) -> pd.DataFrame:
         logger.info(f"Descargando CSV desde {self.url_source}")
