@@ -25,15 +25,32 @@ class GestorPartidos:
     
 
     def get_por_equipo(self, equipo: str):
-        mask = (['home_team'] == equipo) | (['away_team'] == equipo)
+        mask = (self._df['home_team'] == equipo) | (self._df['away_team'] == equipo)
         return self._df[mask].copy() 
 
-    def get_por_anio(self, anio):
-        ...
+    def get_por_anio(self, anio: int) -> pd.DataFrame:
+        resultado = self._df['date'].dt.year == anio
+        return self._df[resultado].copy()
 
-    def get_por_sede(self, pais):
-        ...
+    def get_por_sede(self, pais: str) -> pd.DataFrame:
+        resultado = self._df['country'] == pais
+        return self._df[resultado].copy()
 
-    def ventaja_local(self):
-        ...   
-    
+    def ventaja_local(self) -> dict:
+        partidos_reales = (
+            self._df[self._df['neutral'] == False]       # Exclusión de neutral == False (verdadera ventaja local) 
+            .dropna(subset=['home_score', 'away_score'])
+            .copy()
+            )         
+        ganados_local = (partidos_reales['home_score'] > partidos_reales['away_score']).sum()
+        total = partidos_reales.shape[0]
+        porcentaje = round(ganados_local / total * 100, 2)
+        columnas_relevantes = ['date', 'home_team', 'away_team', 'home_score', 'away_score', 'city', 'country']
+
+        return {
+            'porcentaje_victorias_local': porcentaje,
+            'total_partidos_local': int(total),
+            'detalle': partidos_reales[columnas_relevantes].copy(),
+        }
+
+        

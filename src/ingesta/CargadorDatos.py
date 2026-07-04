@@ -48,6 +48,7 @@ class CargadorDatos:
     
     def enriquecer(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.copy()
+        df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
         df['clave_partido'] = (
             df['date'].astype(str) + '_' +
             df['home_team'] + '_' +
@@ -79,11 +80,11 @@ class CargadorDatos:
         return df_valid
     
 
-if __name__ == "__main__":
-    cargador = CargadorDatos(
-        url_source="https://raw.githubusercontent.com/martj42/international_results/master/results.csv",
-        raw_path="data/raw",
-        processed_path="data/processed",
-    )
-    df_final = cargador.ejecutar()
-    print(df_final.head())
+#if __name__ == "__main__":
+#    cargador = CargadorDatos(
+#        url_source="https://raw.githubusercontent.com/martj42/international_results/master/results.csv",
+#        raw_path="data/raw",
+#        processed_path="data/processed",
+#    )
+#    df_final = cargador.ejecutar()
+#    print(df_final.head())
