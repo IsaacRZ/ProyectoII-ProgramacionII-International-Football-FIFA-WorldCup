@@ -31,7 +31,10 @@ if __name__ == "__main__":
     print(df.correlacion())
     print(df.goles_favor())
     print(df.goles_contra())
+    print(df.diferencia_goles())
     print(df.victorias())
     print(df.derrotas())
     print(df.empates())
-
+    print(df.mas_gol_mundial())
+    print(df.menos_gol_mundial())
+    print(df.veces_sede())
