@@ -38,3 +38,4 @@ if __name__ == "__main__":
     print(df.mas_gol_mundial())
     print(df.menos_gol_mundial())
     print(df.veces_sede())
+    print(df.ranking_mundial())

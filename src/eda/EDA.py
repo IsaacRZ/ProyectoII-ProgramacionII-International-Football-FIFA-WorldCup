@@ -48,6 +48,7 @@ class ProcesadorEDA:
             self.__DF['date'] = pd.to_datetime(self.__DF['date'])
             return print(self.__DF.info())
 
+
     # Revisión de Nulos
     def nulos(self):
         revision_nulos = self.__DF.isnull().sum().sum()
@@ -61,6 +62,7 @@ class ProcesadorEDA:
             print("No hay elementos nulos")
             return False
 
+
     # Eliminación de Nulos
     def dropNulos(self):
         self.__DF = self.__DF.dropna()
@@ -71,12 +73,14 @@ class ProcesadorEDA:
             print("No hay elementos nulos")
             return False
 
+
     # Matriz de Correlación
     def correlacion(self):
         filtro_numerico = self.__DF.select_dtypes(['number']) # Se filtran solo los datos numéricos
         m_correlacion = filtro_numerico.corr()
         print("Matriz de Correlacion")
         return m_correlacion
+
 
     # Países con mas goles marcados
     def goles_favor(self):
@@ -95,6 +99,7 @@ class ProcesadorEDA:
 
         return resultados
 
+
     # Equipos con mas goles recibidos
     def goles_contra(self):
         recibidos_visita = self.__DF.groupby('away_team')['home_score'].sum()
@@ -111,6 +116,7 @@ class ProcesadorEDA:
         # Se reinician los índices para agregar nuevos y se sustituye "index" por "Selección"
 
         return resultados
+
 
     def diferencia_goles(self):
         goles_favor = self.goles_favor()
@@ -133,6 +139,7 @@ class ProcesadorEDA:
 
         return tabla_goles
 
+
     # Equipos con mas victorias
     def victorias(self):
         df_gana_local = self.__DF[self.__DF['home_score'] > self.__DF['away_score']]
@@ -153,6 +160,7 @@ class ProcesadorEDA:
 
         return resultados
 
+
     # Equipos con mas derrotas
     def derrotas(self):
         df_derrota_local = self.__DF[self.__DF['home_score'] < self.__DF['away_score']]
@@ -170,6 +178,7 @@ class ProcesadorEDA:
         resultados.columns = ['Selección', 'Cantidad de Derrotas']
 
         return resultados
+
 
     # Equipos con mas empates
     def empates(self):
@@ -189,6 +198,7 @@ class ProcesadorEDA:
         # Se resetean los índices y se agrega junto a la selección correspondiente
 
         return resultados
+
 
     # Mundial con mas goles
     def mas_gol_mundial(self):
@@ -228,9 +238,9 @@ class ProcesadorEDA:
 
         return resultados.head(n = 11)
 
+
     # País que mas veces a sido sede, año en que fue y equipo campeón
     def veces_sede(self):
-        self.tipoFecha()
         sede = self.__DF.copy()
         sede['Año'] = sede['date'].dt.year
         indices_finales = sede.groupby('Año')['date'].idxmax()
@@ -253,13 +263,13 @@ class ProcesadorEDA:
         # El campeón es agregado al año correspondiente
         sedes_unicas['Campeón'] = sedes_unicas['Año'].map(diccionario_campeones)
 
-        # 2026 se deja nulo para evitar conflictos de inserción con ".join"
+        # 2026 se deja nulo y se cambia por "Por Definir" para evitar conflictos de inserción con ".join"
         sedes_unicas['Campeón'] = sedes_unicas['Campeón'].fillna('Por Definir')
 
         # Se agrupan los datos que se van a mostrar
         resultados = sedes_unicas.groupby('country').agg(
             Veces_Sede=('Año', 'count'),
-            # Se da la orden de que no dice "Por Definir" estee agregue al campeón, esto para evitar poner un campeón en 2026
+            # Si no dice "Por Definir" este agregua al campeón, así evitamos un campeón en 2026
             Campeones_Sede=('Campeón', lambda x: ', '.join([c for c in x.unique() if c != 'Por Definir'])),
             # Se transforma en str para que no de error
             Anho_Sede=('Año', lambda x: ', '.join(sorted(x.unique().astype(str))))
@@ -272,4 +282,23 @@ class ProcesadorEDA:
         return resultados
 
 
+    def ranking_mundial(self):
+        diferencia_goles = self.diferencia_goles()
+        victorias = self.victorias()
+        derrotas = self.derrotas()
+        empates = self.empates()
+        # Llaman las funciones necesarias para trabajar
 
+        ranking = pd.merge(victorias, empates, on='Selección', how='outer') \
+                     .merge(derrotas, on='Selección', how='outer') \
+                     .merge(diferencia_goles, on='Selección', how='outer')
+
+        ranking = ranking.fillna(0)
+        ranking['Puntos'] = (ranking['Cantidad de Victorias'] * 3) + (ranking['Cantidad de Empates'] * 1)
+        enteros = ['Cantidad de Victorias', 'Cantidad de Derrotas', 'Cantidad de Empates',
+                   'Goles Anotados', 'Goles Recibidos', 'Diferencia Goles', 'Puntos']
+        ranking[enteros] = ranking[enteros].astype(int)
+        ranking = ranking.sort_values(by='Puntos', ascending=False)
+        ranking = ranking.reset_index(drop=True)
+
+        return ranking
