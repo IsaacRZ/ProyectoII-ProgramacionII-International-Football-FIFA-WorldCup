@@ -1,0 +1,11 @@
+# 1. Caché de Python (Esto ignora todas las carpetas __pycache__ sin importar dónde estén)
+__pycache__/
+*.py[cod]
+
+# 2. Archivos temporales de Jupyter Notebooks
+.ipynb_checkpoints/
+
+# 3. Entornos virtuales (por si acaso creas uno dentro de la carpeta en el futuro)
+.env
+venv/
+env/
