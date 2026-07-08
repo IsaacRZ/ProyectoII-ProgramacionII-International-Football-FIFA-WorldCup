@@ -1,14 +1,22 @@
+import sys
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 import EDA
 import ingesta.CargadorDatos as cd
 
+sys.path.append(str(Path.cwd().parent / "src"))
+
+from ingesta.CargadorDatos import CargadorDatos
+from gestor.GestorPartidos import GestorPartidos
+
 # Invocar último código de "CargadorDatos para llamar al archivo
 if __name__ == "__main__":
     cargador = cd.CargadorDatos(
-        url_source="https://raw.githubusercontent.com/martj42/international_results/master/results.csv",
-        raw_path="data/raw",
-        processed_path="data/processed",
+    url_source="https://raw.githubusercontent.com/martj42/international_results/master/results.csv",
+    raw_path="../data/raw",
+    processed_path="../data/processed",
     )
 
     # Esta variable ya tiene los datos limpios y listos en memoria
