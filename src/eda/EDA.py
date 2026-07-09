@@ -15,7 +15,7 @@ class ProcesadorEDA:
         self._gestor = gestor
         self._df = gestor.df
         self._filas = self._df.shape[0]
-        self.columnas = self._df.shape[1]
+        self._columnas = self._df.shape[1]
 
     @property
     def df(self) -> pd.DataFrame:

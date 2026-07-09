@@ -23,7 +23,7 @@ class GestorPartidos:
             return None
         return resultado.iloc[0].to_dict()   
 
-    def get_por_equipo(self, equipo: str):
+    def get_por_equipo(self, equipo: str) -> pd.DataFrame:
         mask = (self._df['home_team'] == equipo) | (self._df['away_team'] == equipo)
         return self._df[mask].copy() 
 
@@ -69,7 +69,7 @@ class GestorPartidos:
         idmax = partidos_validos['total_score'].idxmax()
         return partidos_validos.loc[idmax].to_dict()
     
-    def get_por_equipo(self, equipo: str) -> int:
+    def get_goles_por_equipo(self, equipo: str) -> int:
         partidos =  self.get_por_equipo(equipo)
 
         partidos_local = partidos[partidos['home_team'] == equipo]

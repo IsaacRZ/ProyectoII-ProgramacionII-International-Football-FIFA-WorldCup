@@ -16,7 +16,13 @@ class CargadorDatos:
         self.raw_path.mkdir(parents = True, exist_ok = True)
         self.processed_path.mkdir(parents = True, exist_ok = True)
         
-    def descargar(self) -> pd.DataFrame:
+    def descargar(self, forzar: bool = False) -> pd.DataFrame:
+        ruta_cache = self.raw_path / "raw_results.csv"
+        
+        if ruta_cache.exists and not forzar:
+            logger.info(f"Usando cache local: {ruta_cache}")
+            return pd.read_csv(ruta_cache, index_col='id')
+
         logger.info(f"Descargando CSV desde {self.url_source}")
         response = requests.get(self.url_source, timeout=30)
         response.raise_for_status() # Check HTTP response error exc 404, 500, etc.
