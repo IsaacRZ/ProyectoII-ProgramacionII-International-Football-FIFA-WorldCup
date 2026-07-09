@@ -16,7 +16,6 @@ class CargadorDatos:
         self.raw_path.mkdir(parents = True, exist_ok = True)
         self.processed_path.mkdir(parents = True, exist_ok = True)
         
-
     def descargar(self) -> pd.DataFrame:
         logger.info(f"Descargando CSV desde {self.url_source}")
         response = requests.get(self.url_source, timeout=30)
@@ -40,7 +39,7 @@ class CargadorDatos:
         if columnas_faltantes:
             raise ValueError(f"Faltan columnas esperadas: {columnas_faltantes}")
 
-        nulos = df[['home_score', 'away_score']].isna().sum().sum()
+        nulos = df[['home_score', 'away_score']].isna().sum().sum()     # Subconjunto de datos: 2 columnas [[]] 
         if nulos > 0:
             logger.warning(f"Se encontraron {nulos} valores nulos en marcadores")
 
@@ -48,6 +47,7 @@ class CargadorDatos:
     
     def enriquecer(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.copy()
+        df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
         df['clave_partido'] = (
             df['date'].astype(str) + '_' +
             df['home_team'] + '_' +
@@ -77,13 +77,3 @@ class CargadorDatos:
         df_valid = self.validar(df_enriched)
         self.guardar(df_raw, df_valid)
         return df_valid
-    
-
-if __name__ == "__main__":
-    cargador = CargadorDatos(
-        url_source="https://raw.githubusercontent.com/martj42/international_results/master/results.csv",
-        raw_path="data/raw",
-        processed_path="data/processed",
-    )
-    df_final = cargador.ejecutar()
-    print(df_final.head())
