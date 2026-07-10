@@ -29,13 +29,8 @@ if __name__ == "__main__":
     # Verificación de que el objeto haya cargado correctamente
     print(df.columnas)
     print(df.filas)
-    print(df.verificadorDatos())
-    print(df.nombreColumnas())
     # print(df.primerosDatos())
     # print(df.ultimososDatos())
-    print(df.tipoFecha())
-    print(df.nulos())
-    print(df.dropNulos())
     print(df.correlacion())
     print(df.goles_favor())
     print(df.goles_contra())
