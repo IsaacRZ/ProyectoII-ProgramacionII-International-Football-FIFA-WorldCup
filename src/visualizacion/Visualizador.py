@@ -1,88 +1,156 @@
 # Paquetes utilizados
 import matplotlib.pyplot as plt
 import pandas as pd
-from fontTools.merge import layout
-
+import numpy as np
+import geopandas as gpd
 from src.eda import EDA
 
 class Visualizador:
     def __init__(self, DF):
-        self.__DF = DF
-        self.__filas = DF.shape[0]
-        self.__columnas = DF.shape[1]
+        self._DF = DF
+        self._filas = self._DF.df.shape[0]
+        self._columnas = self._DF.df.shape[1]
 
     @property
     def DF(self):
-        return self.__DF
+        return self._DF
 
     @property
     def columnas(self):
-        return self.__columnas
+        return self._columnas
 
     @property
     def filas(self):
-        return self.__filas
-    def diferencia_goles_positivos(self):
-        invocador = EDA.ProcesadorEDA(self.__DF)
-        invocador = invocador.diferencia_goles()
-        # Se invoca la clase "ProcesadorEDA" y la función "diferencia_goles"
+        return self._filas
 
-        positivo = invocador.sort_values(by= 'Diferencia Goles', ascending=False).head(n = 5)
-        # Se obtienen los 5 países con mejor diferencia de goles
+    def grafico_diferencia_goles(self):
+        invocador = EDA.ProcesadorEDA(self._DF)
+        tabla_goles = invocador.diferencia_goles().fillna(0)
+        # Invocador sirve para llamar a la clase ProcesadorEDA
 
-        positivo = positivo.fillna(0)
-        # En caso de que hayan datos nulos se sustituyen por un 0
+        top_negativo = tabla_goles.sort_values(by='Diferencia Goles', ascending=False).tail(5)
+        top_positivo = tabla_goles.sort_values(by='Diferencia Goles', ascending=True).tail(5)
+        # Se extrae en ambos tail para una mejor representación en el gráfico
 
-        datos_grafico = positivo[['Selección', 'Goles Anotados', 'Goles Recibidos', 'Diferencia Goles']]
-        datos_grafico = datos_grafico.set_index('Selección')
-        # Se agregan los datos en una variable para el gráfico y se usa 'Selección' como índice
+        df_tornado = pd.concat([top_negativo, top_positivo]).reset_index(drop=True)
+        # Se invierte el orden gracias al "reset_index" para que vaya del puesto 1 al puesto 5
 
-        fig, ax = plt.subplots(layout='constrained')
-        datos_grafico.plot(kind='bar', ax=ax, width=0.8, color=['#FFEF5F', '#48A111', '#1C4D8D'])
-        # Se agregan los colores para cada barra
+        fig, ax = plt.subplots(figsize=(10, 6), layout='constrained')
+        y_pos = np.arange(len(df_tornado))
+        colores = ['#E74C3C' if x < 0 else '#48A111' for x in df_tornado['Diferencia Goles']]
+        barras = ax.barh(y_pos, df_tornado['Diferencia Goles'], color= colores)
+        # Posicionamos los 10 países en el lienzo y le damos colores
 
-        for container in ax.containers:
-            ax.bar_label(container, padding=3)
-        # Se añaden las etiquetas numéricas encima de cada barra
+        ax.axvline(0, color='black', linewidth=1.5, linestyle='-')
+        # Línea que divide las barras
 
-        ax.set_title('Top 5 Países con Mejor Diferencia de Goles en Mundiales')
-        ax.set_ylabel('Cantidad de Goles')
-        ax.legend(loc='upper right', ncol=3)
-        ax.set_ylim(0, 300)
-        plt.xticks(rotation=0)
+        for barra in barras:
+            width = barra.get_width()
+            if width < 0:
+                ax.text(width - 4, barra.get_y() + barra.get_height() / 2, f'{int(width)}',
+                        va='center', ha='right', color='black', fontweight='bold')
+            else:
+                ax.text(width + 4, barra.get_y() + barra.get_height() / 2, f'+{int(width)}',
+                        va='center', ha='left', color='black', fontweight='bold')
+        # Aquí se asignan etiquetas de los ejes
+
+        ax.set_title('Las 5 Selecciones con Mejores y Peores Diferencias de Goles',
+                     fontsize=14, fontweight='bold', pad=15)
+        ax.set_xlabel('Diferencia de Goles')
+
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(df_tornado['Selección'], fontsize=10, fontweight='bold')
+        # Nombre de las selecciones en el eje y
+
+        limite_max = max(abs(df_tornado['Diferencia Goles'].min()), abs(df_tornado['Diferencia Goles'].max())) + 25
+        ax.set_xlim(-limite_max, limite_max)
+        # Límite de simetría en los ejes x
+
+        ax.spines[['top', 'right', 'left']].set_visible(False)
+        ax.tick_params(left=False)
+
+        return plt.show()
+
+    def goles_por_mundial(self):
+        invocador = EDA.ProcesadorEDA(self._DF)
+        goles_mundiales = invocador.goles_mundial().sort_values(by = 'Año', ascending = True)
+
+        valores_x = goles_mundiales['Año']
+        valores_y = goles_mundiales['Goles Anotados']
+        # Se obtienen los valores del eje x y del eje y
+
+        fig, ax = plt.subplots(figsize=(10, 5), layout='constrained')
+
+        ax.plot(valores_x, valores_y, color="#48A111", marker='o', linewidth=2, markersize=6)
+
+        ax.set_title('Goles Marcados en los Mundiales', fontsize=14, fontweight='bold', pad=15)
+        ax.set_ylabel('Cantidad de Goles', fontsize=11)
+        ax.set_xlabel('Edición del Mundial (Año)', fontsize=11)
+
+        for x, y in zip(valores_x, valores_y):
+            ax.text(
+                x,
+                y + 4,
+                f'{int(y)}',
+                ha='center',
+                va='bottom',
+                fontsize=9,
+                fontweight='bold',
+                color='#2C3E50'
+            )
+
+        ax.set_xticks(valores_x)
+        plt.xticks(rotation=45)
+
+        ax.set_ylim(min(valores_y) - 10, max(valores_y) + 20)
+        # Se amplía el rango de límite de altura
+
+        ax.grid(True, linestyle='--', alpha=0.5)
+        return plt.show()
+
+    def mejores_cinco_selecciones(self):
+        invocador = EDA.ProcesadorEDA(self._DF)
+        ranking_completo = invocador.ranking_mundial()
+        top5 = ranking_completo.head(5).copy()
+
+        columnas_radar = ['Cantidad de Victorias', 'Cantidad de Empates', 'Cantidad de Derrotas','Goles Anotados','Goles Recibidos', 'Diferencia Goles','Puntos']
+        categorias = ['Victorias', 'Empates', 'Derrotas','Gol Anotado','Gol Recibido', 'Dif. Goles','Puntos']
+        # Recibe el nombre de las columnas y se les asigna un nombre mas corto
+
+        num_variables = len(categorias)
+
+        angulos = np.linspace(0, 2 * np.pi, num_variables, endpoint=False).tolist()
+        # Se calculan los ángulos de cada eje en círculo
+
+        angulos += angulos[:1]
+
+        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True), layout='constrained')
+        ax.set_xticks(angulos[:-1])
+        ax.set_xticklabels(categorias, fontsize=11, fontweight='bold')
+        colores = ['#FFBF00', '#F62440', '#9CD5FF', '#2CA02C', '#1B4EF5']
+        # Mostrar el nombre de las selecciones y asignarles un color a cada una
+
+        for i, (idx, fila) in enumerate(top5.iterrows()):
+            pais = fila['Selección']
+            puntos_pais = fila['Puntos']
+
+            # Extraemos los valores de las columnas seleccionadas para el país actual
+            valores = fila[columnas_radar].values.tolist()
+
+            valores += valores[:1]
+            # Se cierrra el bucle duplicando el valor
+
+            ax.plot(angulos, valores, color=colores[i], linewidth=2, label=f"{pais} ({puntos_pais} pts)")
+            # Rellenamos el área con un color translúcido (alpha) para que se solapen elegantemente
+            ax.fill(angulos, valores, color=colores[i], alpha=0.15)
+            # Se dibuja la línea del país
+
+        ax.set_title('Top 5 Histórico de los Mundiales', fontsize=14, fontweight='bold', pad=20)
+
+        ax.legend(title = 'Puntos Totales',loc='upper right', bbox_to_anchor=(1.3, 1.0), fontsize=10, shadow=True)
+
+        ax.grid(color='#AAAAAA', linestyle='--', linewidth=0.5)
+        # Estilo de las líneas de la telaraña
 
         return plt.show()
 
-    def diferencia_goles_negativos(self):
-        invocador = EDA.ProcesadorEDA(self.__DF)
-        invocador = invocador.diferencia_goles()
-        # Se invoca la clase "ProcesadorEDA" y la función "diferencia_goles"
-
-        negativo = invocador.sort_values(by= 'Diferencia Goles', ascending=True).head(n=5)
-        # Se obtienen los 5 países con mejor diferencia de goles
-
-        negativo = negativo.fillna(0)
-        # En caso de que no hayan datos nulos se sustituyen por un 0
-
-        datos_grafico = negativo[['Selección', 'Goles Anotados', 'Goles Recibidos', 'Diferencia Goles']]
-        datos_grafico = datos_grafico.set_index('Selección')
-        # Se agregan los datos en una variable para el gráfico y se usa 'Selección' como índice
-
-        fig, ax = plt.subplots(layout='constrained')
-        datos_grafico.plot(kind='bar', ax=ax, width=0.8, color=['#F0E9C2', '#021A54', '#A82323'])
-        # Se agregan los colores para cada barra
-
-        ax.axhline(0, color='black', linewidth=1.2, linestyle='-')
-        # Línea que divide los valores positivos y negativos
-
-        for container in ax.containers:
-            ax.bar_label(container, padding=3, labels=[f'{int(v):}' if v != 0 else '' for v in container.datavalues])
-        # Las etiquetas se vuelven dinámicas, si posee valores negativos estos se van abajo
-
-        ax.set_title('Top 5 Países con Peor Diferencia de Goles en Mundiales')
-        ax.set_ylabel('Cantidad de Goles')
-        ax.legend(loc='upper right', ncol=3)
-        ax.set_ylim(-80, 150)
-        plt.xticks(rotation=0)
-
-        return plt.show()

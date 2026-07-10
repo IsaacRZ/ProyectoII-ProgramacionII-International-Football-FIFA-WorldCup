@@ -1,21 +1,18 @@
-# Llamado de librerías
 import sys
 from pathlib import Path
 
 import pandas as pd
 
 sys.path.append(str(Path.cwd().parent / "src"))
-
 from ingesta.CargadorDatos import CargadorDatos
 from gestor.GestorPartidos import GestorPartidos
 
 # Definición de la clase
 class ProcesadorEDA:
     def __init__(self, gestor: GestorPartidos):
-        self._gestor = gestor
         self._df = gestor.df
+        self._columnas = self._df.shape[1]
         self._filas = self._df.shape[0]
-        self.columnas = self._df.shape[1]
 
     @property
     def df(self) -> pd.DataFrame:
@@ -28,6 +25,7 @@ class ProcesadorEDA:
     @property
     def filas(self) -> int:
         return self._filas
+    # Se utiliza solo un "_" porque es un atributo interno
 
     """
     # En duda si dejarlo o no
@@ -167,8 +165,8 @@ class ProcesadorEDA:
         return resultados
 
 
-    # Mundial con mas goles
-    def mas_gol_mundial(self):
+    # Goles totales en los mundiales
+    def goles_mundial(self):
         sede = self._df.copy()
         sede['Año'] = sede['date'].dt.year
         # "lambda" realiza la función de devolver los años con mas de una sede en un mismo lugar
@@ -184,26 +182,7 @@ class ProcesadorEDA:
         resultados.columns = ['Sede(s)', 'Año', 'Goles Anotados']
         # Se resetean los índices y se agrega el nuevo "Goles Anotados" junto a la sede y al año
 
-        return resultados.head(n = 11)
-
-
-    # Mundial con menos goles
-    def menos_gol_mundial(self):
-        sede = self._df.copy()
-        sede['Año'] = sede['date'].dt.year
-        sede['Sede'] = sede.groupby('Año')['country'].transform(lambda x: ' / '.join(sorted(x.unique())))
-        # Se filtra la sede y en caso de ser varias se pone como una misma gracias a "lambda"
-
-        goles_totales = sede.groupby(['Sede', 'Año'])[['home_score', 'away_score']].sum()
-        goles_totales['Goles Anotados'] = goles_totales['home_score'] + goles_totales['away_score']
-        goles_ordenados = goles_totales['Goles Anotados'].astype(int).sort_values(ascending=True)
-        # Se suman los goles de los equipos locales y visitantes y se agrupan a los mundiales correspondientes
-
-        resultados = goles_ordenados.reset_index(name='Goles Anotados')
-        resultados.columns = ['Sede(s)', 'Año', 'Goles Anotados']
-        # Se resetean los índices y se agrega el nuevo "Goles Anotados" junto a la sede y al año
-
-        return resultados.head(n = 11)
+        return resultados
 
 
     # País que mas veces a sido sede, año en que fue y equipo campeón
