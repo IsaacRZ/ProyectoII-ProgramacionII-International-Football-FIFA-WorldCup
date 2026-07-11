@@ -227,7 +227,7 @@ class ProcesadorEDA:
 
         return resultados
 
-
+    # Obtención de mejores selecciones en mundiales
     def ranking_mundial(self):
         diferencia_goles = self.diferencia_goles()
         victorias = self.victorias()
