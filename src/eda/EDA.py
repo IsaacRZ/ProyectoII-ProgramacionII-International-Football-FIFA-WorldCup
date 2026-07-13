@@ -1,18 +1,21 @@
+# Llamado de librerías
 import sys
 from pathlib import Path
 
 import pandas as pd
+from matplotlib import pyplot as plt
 
 sys.path.append(str(Path.cwd().parent / "src"))
-from ingesta.CargadorDatos import CargadorDatos
+
 from gestor.GestorPartidos import GestorPartidos
 
 # Definición de la clase
 class ProcesadorEDA:
     def __init__(self, gestor: GestorPartidos):
+        self._gestor = gestor
         self._df = gestor.df
-        self._columnas = self._df.shape[1]
         self._filas = self._df.shape[0]
+        self._columnas = self._df.shape[1]
 
     @property
     def df(self) -> pd.DataFrame:
@@ -25,20 +28,17 @@ class ProcesadorEDA:
     @property
     def filas(self) -> int:
         return self._filas
-    # Se utiliza solo un "_" porque es un atributo interno
 
-    """
-    # En duda si dejarlo o no
     # Vista de primeros 15 elementos
     def primerosDatos(self):
-        pd.set_option('display.max_rows', self.__columnas)
+        pd.set_option('display.max_rows', self._columnas)
         return print(self._df.head(n = 15))
 
     # Vista de últimos 15 elementos
     def ultimososDatos(self):
-        pd.set_option('display.max_rows', self.__columnas)
+        pd.set_option('display.max_rows', self._columnas)
         return print(self._df.tail(n = 15))
-    """
+
 
     # Matriz de Correlación
     def correlacion(self):
@@ -47,6 +47,31 @@ class ProcesadorEDA:
         print("Matriz de Correlacion")
         return m_correlacion
 
+    # Descripción
+    def descripcion(self):
+        descripcion = self._df.describe()
+        return descripcion
+
+    # Revisión de outliers en goles de local y visita
+    def outliers(self):
+        goles_local = self._df['home_score'].dropna()
+        goles_visita = self._df['away_score'].dropna()
+        # Al final se ingresa el dropna para evitar errores
+
+        fig, ax = plt.subplots(figsize=(8, 6), layout='constrained')
+        ax.boxplot([goles_local, goles_visita], showfliers=True)
+        ax.set_xticklabels(['Goles Local', 'Goles Visita'])
+        # Creamos el lienzo del gráfico y le pasamos los datos a utilizar
+
+        ax.set_title('Distribución y Comparativa de Goles en los Mundiales', fontsize=13, fontweight='bold', pad=15)
+        ax.set_ylabel('Cantidad de Goles por Partido', fontsize=11)
+        ax.grid(axis='y', linestyle='--', alpha=0.4)
+
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        # Esto quita la línea de arriba y de la derecha del lienzo, lo cual evita que parezca una caja
+
+        return plt.show()
 
     # Países con mas goles marcados
     def goles_favor(self):
@@ -165,8 +190,8 @@ class ProcesadorEDA:
         return resultados
 
 
-    # Goles totales en los mundiales
-    def goles_mundial(self):
+    # Mundial con mas goles
+    def mas_gol_mundial(self):
         sede = self._df.copy()
         sede['Año'] = sede['date'].dt.year
         # "lambda" realiza la función de devolver los años con mas de una sede en un mismo lugar
@@ -182,7 +207,26 @@ class ProcesadorEDA:
         resultados.columns = ['Sede(s)', 'Año', 'Goles Anotados']
         # Se resetean los índices y se agrega el nuevo "Goles Anotados" junto a la sede y al año
 
-        return resultados
+        return resultados.head(n = 11)
+
+
+    # Mundial con menos goles
+    def menos_gol_mundial(self):
+        sede = self._df.copy()
+        sede['Año'] = sede['date'].dt.year
+        sede['Sede'] = sede.groupby('Año')['country'].transform(lambda x: ' / '.join(sorted(x.unique())))
+        # Se filtra la sede y en caso de ser varias se pone como una misma gracias a "lambda"
+
+        goles_totales = sede.groupby(['Sede', 'Año'])[['home_score', 'away_score']].sum()
+        goles_totales['Goles Anotados'] = goles_totales['home_score'] + goles_totales['away_score']
+        goles_ordenados = goles_totales['Goles Anotados'].astype(int).sort_values(ascending=True)
+        # Se suman los goles de los equipos locales y visitantes y se agrupan a los mundiales correspondientes
+
+        resultados = goles_ordenados.reset_index(name='Goles Anotados')
+        resultados.columns = ['Sede(s)', 'Año', 'Goles Anotados']
+        # Se resetean los índices y se agrega el nuevo "Goles Anotados" junto a la sede y al año
+
+        return resultados.head(n = 11)
 
 
     # País que mas veces a sido sede, año en que fue y equipo campeón
@@ -227,7 +271,7 @@ class ProcesadorEDA:
 
         return resultados
 
-    # Obtención de mejores selecciones en mundiales
+
     def ranking_mundial(self):
         diferencia_goles = self.diferencia_goles()
         victorias = self.victorias()
