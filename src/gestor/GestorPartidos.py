@@ -1,4 +1,9 @@
+import logging
 import pandas as pd
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class GestorPartidos:
     """
@@ -25,8 +30,11 @@ class GestorPartidos:
 
     def get_por_equipo(self, equipo: str) -> pd.DataFrame:
         mask = (self._df['home_team'] == equipo) | (self._df['away_team'] == equipo)
-        return self._df[mask].copy() 
-
+        resultado = self._df[mask].copy() 
+        if resultado.empty:
+            logging.warning(f"No se encontraron partidos para el equipo '{equipo}'")
+        return resultado
+    
     def get_por_anio(self, anio: int) -> pd.DataFrame:
         resultado = self._df['date'].dt.year == anio
         return self._df[resultado].copy()

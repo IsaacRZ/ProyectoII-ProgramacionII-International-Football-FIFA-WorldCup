@@ -70,8 +70,8 @@ class CargadorDatos:
         raw_file_path = self.raw_path / "raw_results.csv"
         processed_file_path = self.raw_path / "partidos-mundial.csv"
 
-        df_raw.to_csv(raw_file_path, index=True, index_label="id")
-        df_processed.to_csv(processed_file_path, index=True, index_label="id")
+        df_raw.to_csv(raw_file_path, index=False, index_label="id")
+        df_processed.to_csv(processed_file_path, index=False, index_label="id")
 
         logger.info(f"Guardado raw en: {raw_file_path}")
         logger.info(f"Guardado processed en: {processed_file_path}")
