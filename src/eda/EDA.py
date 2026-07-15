@@ -207,7 +207,7 @@ class ProcesadorEDA:
         resultados.columns = ['Sede(s)', 'Año', 'Goles Anotados']
         # Se resetean los índices y se agrega el nuevo "Goles Anotados" junto a la sede y al año
 
-        return resultados.head(n = 11)
+        return resultados
 
 
     # Mundial con menos goles
@@ -226,7 +226,7 @@ class ProcesadorEDA:
         resultados.columns = ['Sede(s)', 'Año', 'Goles Anotados']
         # Se resetean los índices y se agrega el nuevo "Goles Anotados" junto a la sede y al año
 
-        return resultados.head(n = 11)
+        return resultados
 
 
     # País que mas veces a sido sede, año en que fue y equipo campeón

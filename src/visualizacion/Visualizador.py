@@ -2,7 +2,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import geopandas as gpd
 from src.eda import EDA
 
 class Visualizador:
@@ -24,7 +23,7 @@ class Visualizador:
         return self._filas
 
     # Gráfico de tornado (o mariposa) para ver la diferencia de gol
-    def grafico_diferencia_goles(self):
+    def diferencia_goles(self):
         invocador = EDA.ProcesadorEDA(self._DF)
         tabla_goles = invocador.diferencia_goles().fillna(0)
         # Invocador sirve para llamar a la clase ProcesadorEDA
@@ -75,7 +74,7 @@ class Visualizador:
     # Línea del tiempo que muestra los goles marcados en cada edición del mundial
     def goles_por_mundial(self):
         invocador = EDA.ProcesadorEDA(self._DF)
-        goles_mundiales = invocador.goles_mundial().sort_values(by = 'Año', ascending = True)
+        goles_mundiales = invocador.mas_gol_mundial().sort_values(by = 'Año', ascending = True)
 
         valores_x = goles_mundiales['Año']
         valores_y = goles_mundiales['Goles Anotados']
@@ -139,8 +138,6 @@ class Visualizador:
         for i, (idx, fila) in enumerate(top5.iterrows()):
             pais = fila['Selección']
             puntos_pais = fila['Puntos']
-
-            # Extraemos los valores de las columnas seleccionadas para el país actual
             valores = fila[columnas_radar].values.tolist()
 
             valores += valores[:1]

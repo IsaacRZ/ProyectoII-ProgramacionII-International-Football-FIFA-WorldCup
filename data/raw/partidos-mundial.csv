@@ -1063,7 +1063,7 @@ id,date,home_team,away_team,home_score,away_score,tournament,city,country,neutra
 49502,2026-07-10,Spain,Belgium,2.0,1.0,FIFA World Cup,Inglewood,United States,True,2026-07-10_Spain_Belgium
 49503,2026-07-11,Norway,England,1.0,2.0,FIFA World Cup,Miami Gardens,United States,True,2026-07-11_Norway_England
 49504,2026-07-11,Argentina,Switzerland,3.0,1.0,FIFA World Cup,Kansas City,United States,True,2026-07-11_Argentina_Switzerland
-49505,2026-07-14,France,Spain,,,FIFA World Cup,Arlington,United States,True,2026-07-14_France_Spain
+49505,2026-07-14,France,Spain,0.0,2.0,FIFA World Cup,Arlington,United States,True,2026-07-14_France_Spain
 49506,2026-07-15,England,Argentina,,,FIFA World Cup,Atlanta,United States,True,2026-07-15_England_Argentina
-49507,2026-07-18,,,,,FIFA World Cup,Miami Gardens,United States,True,
-49508,2026-07-19,,,,,FIFA World Cup,East Rutherford,United States,True,
+49507,2026-07-18,France,,,,FIFA World Cup,Miami Gardens,United States,True,
+49508,2026-07-19,Spain,,,,FIFA World Cup,East Rutherford,United States,True,
