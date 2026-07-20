@@ -1,7 +1,7 @@
 from src.eda import EDA
 from src.visualizacion import Visualizador as vl
-from src.ingesta import CargadorDatos as cd
-from gestor.GestorPartidos import GestorPartidos
+from src.ingesta.CargadorDatos import CargadorDatos as cd
+from src.gestor.GestorPartidos import GestorPartidos as gp
 
 
 cargador = cd.CargadorDatos(

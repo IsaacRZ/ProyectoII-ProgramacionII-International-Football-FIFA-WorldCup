@@ -1,16 +1,16 @@
-# Llamado de librerías
-import sys
-from pathlib import Path
-
+# Librerías
 import pandas as pd
 from matplotlib import pyplot as plt
 
-sys.path.append(str(Path.cwd().parent / "src"))
+from src.gestor.GestorPartidos import GestorPartidos
 
-from gestor.GestorPartidos import GestorPartidos
 
 # Definición de la clase
 class ProcesadorEDA:
+    """
+    Analisis exploratorio de datos sobre el dataset filtrado de Mundiales.
+    Asume que la clase GestorPartidos valida y limpia los datos recibidos
+    """
     def __init__(self, gestor: GestorPartidos):
         self._gestor = gestor
         self._df = gestor.df
@@ -29,27 +29,23 @@ class ProcesadorEDA:
     def filas(self) -> int:
         return self._filas
 
-    # Vista de primeros 15 elementos
-    def primerosDatos(self):
-        pd.set_option('display.max_rows', self._columnas)
-        return print(self._df.head(n = 15))
+    # Primeros elementos
+    def primeros_datos(self, n: int = 15) -> pd.DataFrame:
+        return self._df.head(n)
 
-    # Vista de últimos 15 elementos
-    def ultimososDatos(self):
-        pd.set_option('display.max_rows', self._columnas)
-        return print(self._df.tail(n = 15))
-
-
+    # Últimos elementos
+    def ultimos_datos(self, n: int = 15) -> pd.DataFrame:
+        return self._df.tail(n)
 
     # Matriz de Correlación
-    def correlacion(self):
+    def correlacion(self) -> pd.DataFrame:
         filtro_numerico = self._df.select_dtypes(['number']) # Se filtran solo los datos numéricos
         m_correlacion = filtro_numerico.corr()
         print("Matriz de Correlacion")
         return m_correlacion
 
     # Descripción
-    def descripcion(self):
+    def descripcion(self) -> pd.DataFrame:
         descripcion = self._df.describe()
         return descripcion
 
@@ -72,10 +68,23 @@ class ProcesadorEDA:
         ax.spines['right'].set_visible(False)
         # Esto quita la línea de arriba y de la derecha del lienzo, lo cual evita que parezca una caja
 
-        return plt.show()
+        plt.show()
+
+    # Goles por mundial
+    def goles_por_mundial(self) -> pd.DataFrame:
+        sede = self._df.copy()
+        sede['Año'] = sede['date'].dt.year
+        sede['Sede'] = sede.groupby('Año')['country'].transform(lambda x: ' / '.join(sorted(x.unique())))
+
+        goles_totales = sede.groupby(['Sede', 'Año'])[['home_score', 'away_score']].sum()
+        goles_totales['Goles Anotados'] = goles_totales['home_score'] + goles_totales['away_score']
+
+        resultados = goles_totales['Goles Anotados'].astype(int).reset_index()
+        resultados.columns = ['Sede(s)', 'Año', 'Goles Anotados']
+        return resultados.sort_values(by='Goles Anotados', ascending=False)
 
     # Países con mas goles marcados
-    def goles_favor(self):
+    def goles_favor(self) -> pd.DataFrame:
         goles_local = self._df.groupby('home_team')['home_score'].sum()
         goles_visita = self._df.groupby('away_team')['away_score'].sum()
         # Los paréntesis cuadrados "[]" permiten acceder a los valores de las columnas, estos son los que se suman
@@ -92,14 +101,14 @@ class ProcesadorEDA:
 
 
     # Equipos con mas goles recibidos
-    def goles_contra(self):
+    def goles_contra(self) -> pd.DataFrame:
         recibidos_visita = self._df.groupby('away_team')['home_score'].sum()
         recibidos_local = self._df.groupby('home_team')['away_score'].sum()
         # Se comparan los goles con los equipos en este caso los contrarios (gol visita al equipo local y viceversa)
 
         goles_totales = recibidos_local.add(recibidos_visita, fill_value=0)
-        goles_totales = goles_totales.sort_values(ascending=False)
         goles_totales = goles_totales.astype(int).sort_values(ascending=False)
+
         # Se suman los goles y se transforman en enteros para mejor legibilidad
 
         resultados = goles_totales.reset_index(name='Goles Recibidos')
@@ -109,7 +118,7 @@ class ProcesadorEDA:
         return resultados
 
 
-    def diferencia_goles(self):
+    def diferencia_goles(self) -> pd.DataFrame:
         goles_favor = self.goles_favor()
         goles_contra = self.goles_contra()
         # Llama la función anteriormente creadas y los guarda en una variable
@@ -132,7 +141,7 @@ class ProcesadorEDA:
 
 
     # Equipos con mas victorias
-    def victorias(self):
+    def victorias(self) -> pd.DataFrame:
         df_gana_local = self._df[self._df['home_score'] > self._df['away_score']]
         # El ".size()" cuenta cuántas victorias obtuvo cada equipo
         victorias_local = df_gana_local.groupby('home_team').size()
@@ -153,7 +162,7 @@ class ProcesadorEDA:
 
 
     # Equipos con mas derrotas
-    def derrotas(self):
+    def derrotas(self) -> pd.DataFrame:
         df_derrota_local = self._df[self._df['home_score'] < self._df['away_score']]
         derrotas_local = df_derrota_local.groupby('home_team').size()
         df_derrota_visita = self._df[self._df['away_score'] < self._df['home_score']]
@@ -172,7 +181,7 @@ class ProcesadorEDA:
 
 
     # Equipos con mas empates
-    def empates(self):
+    def empates(self) -> pd.DataFrame:
         df_empate_local = self._df[self._df['home_score'] == self._df['away_score']]
         empates_local = df_empate_local.groupby('home_team').size()
         df_empate_visita = self._df[self._df['away_score'] == self._df['home_score']]
@@ -192,7 +201,7 @@ class ProcesadorEDA:
 
 
     # Mundial con mas goles
-    def mas_gol_mundial(self):
+    def mas_gol_mundial(self) -> pd.DataFrame:
         sede = self._df.copy()
         sede['Año'] = sede['date'].dt.year
         # "lambda" realiza la función de devolver los años con mas de una sede en un mismo lugar
@@ -212,7 +221,7 @@ class ProcesadorEDA:
 
 
     # Mundial con menos goles
-    def menos_gol_mundial(self):
+    def menos_gol_mundial(self) -> pd.DataFrame:
         sede = self._df.copy()
         sede['Año'] = sede['date'].dt.year
         sede['Sede'] = sede.groupby('Año')['country'].transform(lambda x: ' / '.join(sorted(x.unique())))
@@ -231,7 +240,7 @@ class ProcesadorEDA:
 
 
     # País que mas veces a sido sede, año en que fue y equipo campeón
-    def veces_sede(self):
+    def veces_sede(self) -> pd.DataFrame:
         sede = self._df.copy()
         sede['Año'] = sede['date'].dt.year
         indices_finales = sede.groupby('Año')['date'].idxmax()
@@ -273,7 +282,7 @@ class ProcesadorEDA:
         return resultados
 
 
-    def ranking_mundial(self):
+    def ranking_mundial(self) -> pd.DataFrame:
         diferencia_goles = self.diferencia_goles()
         victorias = self.victorias()
         derrotas = self.derrotas()

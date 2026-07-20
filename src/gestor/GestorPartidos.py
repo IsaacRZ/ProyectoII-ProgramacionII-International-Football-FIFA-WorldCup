@@ -73,10 +73,10 @@ class GestorPartidos:
         partidos =  self.get_por_equipo(equipo)
 
         partidos_local = partidos[partidos['home_team'] == equipo]
-        partidos_visita = partidos[partidos['away_team'] == equipo]
+        goles_local = partidos_local['home_score'].sum()
 
-        goles_local = partidos[partidos_local['home_score'] == equipo]
-        goles_visita = partidos[partidos_visita['away_score'] == equipo]
+        partidos_visita = partidos[partidos['away_team'] == equipo]
+        goles_visita = partidos_visita['away_score'].sum()
 
         total_goles = goles_local + goles_visita
         return int(total_goles)
